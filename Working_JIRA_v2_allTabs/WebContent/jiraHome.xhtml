@@ -1,0 +1,557 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+	
+		   
+<f:view contentType="text/html">
+
+	<h:head>
+        <f:facet name="first">
+        <meta http-equiv="refresh" content="#{session.maxInactiveInterval};url=index.jsp" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+         <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+            <title>JIRA - DETAILS</title>
+        </f:facet>
+        
+       
+        <link type="text/css" rel="stylesheet" href="#{request.contextPath}/css/default.css" />
+        <link type="text/css" rel="stylesheet" href="#{request.contextPath}/css/syntaxhighlighter/syntaxhighlighter.css" />
+
+		<ui:insert name="head"></ui:insert>
+		
+       
+        <script type="text/javascript">
+            $(function() {$('.sidebar a').hover(function() {$(this).toggleClass('ui-state-hover');})});
+        </script>
+	</h:head>
+
+	<h:body  onload="loginDlg.show();">
+	
+	
+	<div id="menu" class="ui-widget ui-widget-content">
+		    
+            <h:form>
+             <p:commandLink id="defaultTheme"  actionListener="#{themeSwitcherBean.saveThemeAsDefault}" rendered="#{login.valid}" style="margin-left:1150px;">  
+			     <h:outputText value="Set As Default Theme" style="font-weight: bold;font-style:italic;" />  
+   			</p:commandLink> 
+           <p:spacer height="25"/>
+                <p:themeSwitcher value="#{themeSwitcherBean.theme}" style="margin-left:1150px;" effect="fade" rendered="#{login.valid}">
+                    <f:selectItem itemLabel="Choose Theme" itemValue="" />
+                    <f:selectItems value="#{themeSwitcherBean.themes}" />
+                    <p:ajax listener="#{themeSwitcherBean.saveTheme}" />
+                </p:themeSwitcher>                           
+            </h:form>
+		</div>
+		
+		<h:form id="displayForm">
+					<p:spacer width="60" height="20" />
+					<font size='2.8' color='blue'><h:outputText value="Hello #{login.userNameDisplay}!" style="font-weight: bold;font-style:italic;" rendered="#{login.valid}"/></font>
+					<p:spacer width="1090" height="0" />
+					<p:commandLink id="logoutLink" actionListener="#{logout.logout}" rendered="#{login.valid}" style="margin-right:20px;font-style:italic;" ajax="false">  
+						<h:outputText value="Logout" style="font-weight: bold;" />  
+					</p:commandLink> 
+		</h:form>
+		
+		
+		<h:form id="jiraForm"  >
+
+                <p:growl id="messages" life="2000" showDetail="true"/>
+         
+        <p:tabView effect="fade" id="jiraTab" orientation="top" effectDuration="normal" rendered="#{login.valid}">
+
+      
+       
+        <p:tab title="Jira Info "  titletip="Jira Tickets from last 30 Days ">
+         
+         
+            <h:panelGrid columns="2" cellpadding="5" > 
+            
+           	<p:dataTable var="jira"  id="jiraTable" value="#{jiraBean.jiraList}" rowKey="#{jira.jiraId}" paginator="true" rows="5" rendered="#{login.valid}"
+           	 selection="#{jiraBean.selectedJira}" selectionMode="single" liveScroll="true" scrollRows="10" style="width:1300px;height:100%"  scrollHeight="150" resizableColumns="true" emptyMessage="No records found." draggableColumns="false">  
+			 
+			        <p:ajax event="rowSelect" update=":jiraForm:jiraDialog" oncomplete="jiraDialog.show();handleDisplayRequest();handleoutageRequest();" />
+
+                  
+               
+   				
+   				 <f:facet name="header">
+   				 <font size='2.8'><h:outputText  value="JIRA DETAILS" style="font-style:italic;" /></font>  
+                    </f:facet>
+                    
+				<p:column headerText="PROJECT" sortBy="#{jira.projectName}" filterBy="#{jira.projectName}"   
+					filterOptions="#{jiraBean.projectOptions}" id="projectName" style="width:125px" rendered="#{login.role=='admin' or login.role=='projectlead'}">
+					<f:facet name="header">  
+          					 <h:outputText value="PROJECT" />  
+					</f:facet>  					
+					 <h:outputText value="#{jira.projectName}"/> 
+                    </p:column>
+					
+                    <p:column headerText="JIRAID" sortBy="#{jira.jiraId}" filterBy="#{jira.jiraId}" id="jiraId" style="width:125px">
+                    <f:facet name="header">  
+          					 <h:outputText value="JIRAID" />  
+					</f:facet>  
+						<h:outputText value="#{jira.jiraId}" />  						                      
+                    </p:column>
+
+                    
+					
+				<p:column headerText="ASSIGNEE" sortBy="#{jira.assignee}" filterBy="#{jira.assignee}"  id="assignee" style="width:125px">
+				<f:facet name="header">  
+          					 <h:outputText value="ASSIGNEE" />  
+					</f:facet>
+                        <h:outputText value="#{jira.assignee}" />
+                    </p:column>
+				
+				
+				<p:column headerText="REPORTER" sortBy="#{jira.reporter}" filterBy="#{jira.reporter}"  id="reporter" style="width:125px;margin:15px">
+				<f:facet name="header">  
+          					 <h:outputText value="REPORTER" />  
+					</f:facet>
+                        <h:outputText value="#{jira.reporter}" />
+                    </p:column>
+					
+				<p:column headerText="SUMMARY" sortBy="#{jira.summary}" filterBy="#{jira.summary}"   
+				 id="title" style="width:300px;margin:15px">
+				 <f:facet name="header">  
+          					 <h:outputText value="SUMMARY" />  
+					</f:facet>
+                       <h:outputText value="#{jira.summary}" />
+                    </p:column>
+				
+					<p:column headerText="PRIORITY" sortBy="#{jira.priority}" filterBy="#{jira.priority}"  id="priority" style="width:125px">
+					 <f:facet name="header">  
+          					 <h:outputText value="PRIORITY" />  
+					</f:facet>
+                       <h:outputText value="#{jira.priority}" />
+                    </p:column>
+					
+					<p:column headerText="STATUS" sortBy="#{jira.status}" filterBy="#{jira.status}"  id="status" style="width:125px">
+					 <f:facet name="header">  
+          					 <h:outputText value="STATUS" />  
+					</f:facet>
+                       <h:outputText value="#{jira.status}" />
+                    </p:column>
+					
+			<p:column headerText="Created Date" sortBy="#{jira.created}"
+					filterBy="#{jira.created}" id="created" style="width:125px">
+					 <f:facet name="header">  
+          					 <h:outputText value="Created Date" />  
+					</f:facet>
+					<h:outputText value="#{jira.created}">
+					  <f:convertDateTime pattern="dd/MMM/yyyy" />
+					</h:outputText>
+				</p:column>
+				
+				
+				<p:column headerText="Updated Date" sortBy="#{jira.updated}"
+					filterBy="#{jira.updated}" id="updated" style="width:125px">
+					 <f:facet name="header">  
+          					 <h:outputText value="Updated Date" />  
+					</f:facet>
+					<h:outputText value="#{jira.updated}" >
+								 <f:convertDateTime pattern="dd/MMM/yyyy" />
+					</h:outputText>
+				</p:column>
+				
+				
+
+					<p:column headerText="Total Effort" sortBy="#{jira.cumulativeEffort}" filterBy="#{jira.cumulativeEffort}"  id="cumulativeEffort" style="width:125px">
+					 <f:facet name="header">  
+          					 <h:outputText value="Total Effort" />  
+					</f:facet>
+                       <h:outputText value="#{jira.cumulativeEffort}" />
+                    </p:column>
+
+	
+		
+			<f:facet name="footer" >
+ 
+				  <h:panelGrid columns="6" cellpadding="0" style="width:90%;height:20px;" >  
+				   
+				   		 <h:outputText value="FROM DATE :" style="font-style:italic;"/>  
+				  			<p:calendar effect="slide" value="#{jiraBean.date1}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="cal1"  />  
+				   		 <h:outputText value="TO DATE :" style="font-style:italic;" />  
+				   			 <p:calendar effect="slide"  value="#{jiraBean.date2}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="cal2" />
+				   			    
+				     <p:commandButton id="calDifference" value="FETCH" update="jiraForm"   style="width:200px;margin:5px;font-weight:bold;font-style:italic" actionListener="#{jiraBean.updateselect}"  effect="fade" ajax="false" /> 
+				     
+				     <p:commandButton id="resetCal" value="RESET" onclick="handleDateRequest();" style="width:200px;font-weight: bold;font-style:italic;"/> 
+				  
+				 </h:panelGrid>  
+          </f:facet>
+          
+
+				</p:dataTable>   
+  </h:panelGrid>
+
+		  <center>    		 
+					<h:panelGrid columns="2" cellpadding="2" >  
+				    <p:panel header="Export All Data" rendered="#{not empty jiraBean.jiraList}">  
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/excel.png" />  
+				            <p:dataExporter type="xls" target="jiraTable" fileName="allJiraTable" />  
+				        </h:commandLink>  
+				  
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/pdf.png" />  
+				            <p:dataExporter type="pdf" target="jiraTable" fileName="allJiraTable"/>  
+				        </h:commandLink>  
+				          
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/csv.png" />  
+				            <p:dataExporter type="csv" target="jiraTable" fileName="allJiraTable" />  
+				        </h:commandLink>  
+				          
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/xml.png" />  
+				            <p:dataExporter type="xml" target="jiraTable" fileName="allJiraTable" />  
+				        </h:commandLink>  
+				    </p:panel>  
+				      
+				    <p:panel header="Export Page Data"  rendered="#{not empty jiraBean.jiraList}">  
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/excel.png" />  
+				            <p:dataExporter type="xls" target="jiraTable" fileName="pageJiraTable" pageOnly="true"/>  
+				        </h:commandLink>  
+				  
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/pdf.png" />  
+				            <p:dataExporter type="pdf" target="jiraTable" fileName="pageJiraTable" pageOnly="true"/>  
+				        </h:commandLink>  
+				          
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/csv.png" />  
+				            <p:dataExporter type="csv" target="jiraTable" fileName="pageJiraTable" pageOnly="true"/>  
+				        </h:commandLink>  
+				          
+				        <h:commandLink>  
+				            <p:graphicImage value="/images/xml.png" />  
+				            <p:dataExporter type="xml" target="jiraTable" fileName="pageJiraTable" pageOnly="true"/>  
+				        </h:commandLink>  
+				    </p:panel>  
+				</h:panelGrid>
+									
+				</center>
+            
+          
+        </p:tab>
+        
+       <p:tab title="TAB II" id="tab2" rendered="#{login.role=='admin' or login.role=='projectlead'}"  >
+ 
+ <h:panelGrid columns='2' cellpadding='10' style="margin-left:20px">
+   		
+   		
+    <h:panelGrid columns='2' cellpadding="3" style="margin-left:10px;">    
+				<h:outputText value="FROM DATE :" style="font-style:italic;"/>  
+				  	
+			    <h:outputText value="TO DATE :" style="font-style:italic;" />  
+		
+			  <p:calendar effect="slide" value="#{chartBean1.date1}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="chartcal1"  />		   
+				
+			  <p:calendar effect="slide"  value="#{chartBean1.date2}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="chartcal2" />
+				   			    
+				     <p:commandButton id="chartRange" value="FETCH"  style="width:145px;" actionListener="#{chartBean1.monthlyData}"  update=":jiraForm"   effect="fade" /> 
+				 
+	</h:panelGrid>
+			
+    		
+	<h:panelGrid columns='1' cellpadding="3" style="margin-left:10px;" >  
+	
+		<h:panelGrid columns='2' cellpadding="3" style="margin-top:8px;" >  	
+				<h:outputText value="FROM DATE :" style="font-style:italic;"/>  
+				  	
+			    <h:outputText value="TO DATE :" style="font-style:italic;" />  
+		
+			  <p:calendar effect="slide" value="#{chartBean1.singlechartdate1}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="singlechartcal1"  />		   
+				
+			  <p:calendar effect="slide"  value="#{chartBean1.singlechartdate2}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="singlechartcal2" />
+		</h:panelGrid>
+			   			    	
+		<h:panelGrid columns='5' >
+				<h:outputText value="Project : " style="font-weight: bold;font-style:italic;" />  
+         <p:selectOneMenu value="#{chartBean1.indProject}" id="plist" style="width:140px;" effect="fade"   >
+        	    <f:selectItems value="#{chartBean1.projects}" />  
+         </p:selectOneMenu>
+      
+         <p:commandButton value="Generate" update="sample2"  actionListener="#{chartBean1.singleproject}"  >  
+		<f:setPropertyActionListener value="#{true}" target="#{sessionScope.renderCampNou}" />
+		</p:commandButton> 
+       
+      </h:panelGrid>
+      
+	</h:panelGrid>
+	
+	<p:pieChart id="sample" value="#{chartBean1.projectpieModel}" legendPosition="e" showDataLabels="true" diameter="225" 
+		                title="Total Effort of all Projects : #{chartBean1.totalpeojecteffort } hrs" style="width:460px;height:350px">
+			</p:pieChart>  
+		
+	
+	
+	 <p:outputPanel id="panel2" autoUpdate="true">  
+       <p:pieChart id="sample2" value="#{chartBean1.singleprojectpieModel}"  legendPosition="e" showDataLabels="true" diameter="250" 
+		                title="#{chartBean1.projectName} Team effort : #{chartBean1.teameffort} hrs" style="width:470px;height:350px" rendered="#{sessionScope.renderCampNou}" />  
+    </p:outputPanel>  
+	
+	</h:panelGrid>
+        </p:tab>
+
+ <p:tab title="TAB III" id="tab3" rendered="#{login.role=='admin' or login.role=='projectlead'}"  >
+ 
+<h:panelGrid columns='3' cellpadding='2'>
+    
+    <h:panelGrid columns='2' cellpadding="3" style="margin-top:8px;" >  	
+				<h:outputText value="FROM DATE :" style="font-style:italic;"/>  
+				  	
+			    <h:outputText value="TO DATE :" style="font-style:italic;" />  
+		
+			  <p:calendar effect="slide" value="#{personBean.empchartdate1}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="personchartcal1"  />		   
+				
+			  <p:calendar effect="slide"  value="#{personBean.empchartdate2}" readonlyInput="true" pattern="dd  MMM yyyy" showButtonPanel="false" navigator="true" onfocus="true" id="personchartcal2" />
+	</h:panelGrid>
+		    
+     <h:panelGrid columns='3' cellpadding="6" style="margin-top:9px;" >  	
+       <h:outputText value="Select Person : " />  
+       
+       <p:selectOneMenu value="#{personBean.person}" effect="fade"  >
+       <f:selectItems value="#{personBean.members}" />  
+       </p:selectOneMenu>
+    
+    
+       <p:commandButton value="Generate" update="category"  actionListener="#{personBean.createCategoryModel}" >
+       <f:setPropertyActionListener value="#{true}" target="#{sessionScope.renderCampNou1}" /> 
+       </p:commandButton>  
+        
+      </h:panelGrid>  
+	</h:panelGrid>
+		
+		
+	
+	<p:outputPanel id="panel3" autoUpdate="true" >  
+      <p:lineChart id="category" value="#{personBean.categoryModel}" legendPosition="e"   
+     title="#{personBean.person}" yaxisLabel="Effort" showMarkers="true"  minY="0" maxY="1000" style="height:250px;margin-top:20px" rendered="#{sessionScope.renderCampNou1}"/> 			
+    </p:outputPanel> 	
+    
+ </p:tab>
+
+    </p:tabView>      
+				
+		<p:dialog header="Login" id="loginDlg" widgetVar="loginDlg" showEffect="fade" hideEffect="fade" closable="false" resizable="false" modal="true" rendered="#{!login.valid}">
+						<h:form id="loginForm">					
+						<p:spacer width="150" height="10" /> <p:graphicImage value="/images/login.png" />
+							<h:panelGrid columns="2" cellpadding="5">
+								<h:outputText for="username" value="Employee Id: *" />
+								<p:inputText id="username" value="#{login.username}" required="true" label="username" />
+								
+								<h:outputLabel for="password" value="Password: * " />
+								<p:password id="password" value="#{login.password}" required="true" label="password" feedback="false"/>
+								
+								<f:facet name="footer">
+									<p:spacer width="125" height="10" /> 
+									<p:commandButton id="LoginId" value="Login" update="messages,jiraForm:myProjectList" 
+										actionListener="#{login.validate}" oncomplete="handleLoginRequest(xhr, status, args)" ajax="false"/>
+									</f:facet>
+								</h:panelGrid>						
+						</h:form>
+			</p:dialog>
+				
+          
+	 
+  	
+			
+		  <p:dialog id="jiraDialog" header="Jira Details" widgetVar="jiraDialog" resizable="true" closable="false" 
+            width="1000" showEffect="drop" hideEffect="drop" maximizable="false" minimizable="false" modal="true"  >  
+        <h:panelGrid id="displayall" columns="6" style="margin-bottom:50px;width:100%" cellpadding="15" >  
+                    
+         <f:facet name="header" > 	
+		<h:outputText value="[" style="float:left"  />  
+		  <h:outputText value="#{jiraBean.selectedJira.jiraId}" id="jiraId" style="float:left;margin-left:10px;" /> 
+		<h:outputText value="]" style="float:left;margin-left:10px;"  />    
+        </f:facet>
+		                  
+	  <h:outputText for="anaEffort" value="Analysis Effort:" />   
+            <p:inputText value="#{jiraBean.selectedJira.anaEffort}" requiredMessage="This field is required." required="true" label="Analysis Effort"  id="anaEffort"  >
+           <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText> 
+			
+			<h:outputText value="CloseDate:"  for="closeDate" />  
+            <p:calendar value="#{jiraBean.selectedJira.closeDate}"  readonlyInput="true" pattern="dd  MMM yyyy" required="false" label="CloseDate" showButtonPanel="false" navigator="true" effect="slide" id="closeDate"/>  
+			
+			 <h:outputText value="Estimated Effort:"  for='estEffort' />  
+            <p:inputText value="#{jiraBean.selectedJira.estEffort}" id="estEffort" requiredMessage="This field is required." required="true" label="Estimated Effort" >
+			 <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText>	
+          
+			 <h:outputText value="Review Effort:"   for='revEffort'/>  
+            <p:inputText value="#{jiraBean.selectedJira.revEffort}" id="revEffort" requiredMessage="This field is required." required="true" label="Review Effort"  >
+             <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText>
+          
+			 <h:outputText value="Dev Effort:" for='devEffort' />  
+            <p:inputText value="#{jiraBean.selectedJira.devEffort}" id="devEffort" requiredMessage="This field is required." required="true" label="Dev Effort" >
+             <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText>
+            		
+			 <h:outputText value="Test Effort:" for="testEffort" />  
+            <p:inputText value="#{jiraBean.selectedJira.testEffort}" id="testEffort" requiredMessage="This field is required." required="true" label="Test Effort"  >
+             <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText>
+           
+			 <h:outputText value="ADD Effort1:" for="add1Effort" />  
+            <p:inputText value="#{jiraBean.selectedJira.add1Effort}" id="add1Effort" requiredMessage="This field is required." required="true" label="ADD Effort1"  >
+             <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText>
+           
+			<h:outputText value="ADD Effort2:" for="add2Effort"/>  
+            <p:inputText value="#{jiraBean.selectedJira.add2Effort}" id="add2Effort" requiredMessage="This field is required." required="true" label="ADD Effort2"  >
+             <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText>
+           
+	        <h:outputText value="Task Type: " for='task' />  
+	        <h:selectOneMenu value="#{jiraBean.selectedJira.tasktype}" id="task" style="width:169px;" effect="drop" >  
+	          <f:selectItem itemLabel="L3  " itemValue="L3" />  
+	          <f:selectItem itemLabel="CTB " itemValue="CTB" />  
+	        </h:selectOneMenu>
+	       
+	        <h:outputText value="Task SubType: " for="stask"/>  
+	        <h:selectOneMenu value="#{jiraBean.selectedJira.tasksubtype}" id="stask" style="width:169px;" onchange="handleoutageRequest();" effect="drop" >  
+	          <f:selectItem itemLabel="BUSINESS HOUSE KEEPING  " itemValue="business_req" />		  
+	          <f:selectItem itemLabel="IT HOUSE KEEPING        " itemValue="housekeeping" />
+	          <f:selectItem itemLabel="OUTAGE               " itemValue="outage" />   
+	        </h:selectOneMenu>
+	       
+              <h:outputText value="RequestChange:" />     
+		   <p:spinner id="minmax" widgetVar="minmax"  readonlyInput="true" value="#{jiraBean.selectedJira.reqchange}"  onchange="handleDisplayRequest();"  min="0" max="1000" > 
+		    </p:spinner> 
+			
+			<h:outputText id="addChangeEffortLabel" value="ADD Change Effort :" style="display:none"/>  
+			<p:inputText id="addChangeEffortEntry" value="#{jiraBean.selectedJira.reqChangeAddEffort}" style="display:none" >
+			  <f:validateLongRange minimum="0" maximum="1000"/> 
+            </p:inputText>
+			
+			<h:outputLabel value="Outage Ticket:"  id="outage"  style="display:block" />  
+            <p:inputText value="#{jiraBean.selectedJira.outageTicket}" id="outageTicket"  requiredMessage="Outage Ticket field is required." required="false"  label="Outage Ticket" style="display:block" />
+	 
+ </h:panelGrid>
+        
+	
+	<p:spacer width="125" height="10"/>
+	
+	<p:commandButton id="reset" type="reset" value="RESET" style="width:200px;margin:15px;"  process="@this" onclick="handleoutageRequest();handleDisplayRequest()" />
+	
+	<p:commandButton id="cancel" type="cancel" value="CLOSE" ajax="true" onclick="confirmation.show();" process="@this" style="width:200px;margin:15px;" effect="fade"  />   
+
+	<p:commandButton id="UpdateId" value="SAVE"  update=":jiraForm:displayall,:jiraForm:jiraTab:jiraTable,:jiraForm:messages"  style="width:200px;margin:15px;" actionListener="#{jiraBean.update}" effect="fade" oncomplete="handleUpdateRequest(xhr, status, args)" />  
+
+  
+   </p:dialog>
+   
+  <p:confirmDialog id="confirmDialog" message="Are you sure about closing the form ?"  
+                header="closing without save" severity="alert" widgetVar="confirmation" ajax="false">  
+                  
+        <p:commandButton id="confirm" value="Yes Sure" process="@this" oncomplete="jiraDialog.hide();"  
+                   onsuccess="confirmation.hide();"  />  
+                    
+        <p:commandButton id="decline" value="Not Yet" process="@this" onclick="confirmation.hide();" type="button" />   
+                  
+    </p:confirmDialog>
+
+
+
+	<script type="text/javascript">  
+			
+					function handleLoginRequest(xhr, status, args) {  
+						alert(args.loggedIn);
+						if(!args.loggedIn) {  
+							jQuery('#loginDlg').effect("shake", { times:3 }, 100);  
+						} else {  
+							//loginDlg.hide();  
+							jQuery('#loginDlg').fadeOut();  
+						}  
+					} 		
+					
+					function handleUpdateRequest(xhr, status, args) {  
+						//alert(args.updated);	
+						if(args.updated!=true)args.updated=false;
+											
+						if(!args.updated) {  
+							jQuery('#jiraDialog').effect("shake", { times:3 }, 100);  
+						} else {  
+							jiraDialog.hide();  
+							//jQuery('#jiraDialog').fadeOut();  
+						}  
+					}
+					
+					function handleDisplayRequest() {  
+						var val = document.getElementById('jiraForm:minmax_input').value;
+						//alert("val = "+val);
+						if(val > 0){
+							document.getElementById('jiraForm:addChangeEffortLabel').style.display='block';
+							document.getElementById('jiraForm:addChangeEffortEntry').style.display='block';
+						}else if (val==0){
+							document.getElementById('jiraForm:addChangeEffortEntry').value=0;
+							document.getElementById('jiraForm:addChangeEffortEntry').style.display='none';
+							document.getElementById('jiraForm:addChangeEffortLabel').style.display='none';
+							document.getElementById('jiraForm:addChangeEffortEntry').style.display='none';
+						}
+					} 	
+					
+				function handleoutageRequest(){
+					
+					//alert('aaaa');
+					//alert(document.getElementById('jiraForm:stask').value);
+					var val = document.getElementById('jiraForm:stask').value;
+					if(val!='outage')
+						{
+								document.getElementById('jiraForm:outageTicket').style.display='none';
+								document.getElementById('jiraForm:outage').style.display='none';
+						}
+					else
+						{
+						document.getElementById('jiraForm:outageTicket').style.display='block';
+						document.getElementById('jiraForm:outage').style.display='block';
+						}
+				}
+					function handleDateRequest() {
+						
+						//alert('aaaaa');
+						document.getElementById('jiraForm:jiraTab:jiraTable:cal1_input').value="";
+						document.getElementById('jiraForm:jiraTab:jiraTable:cal2_input').value="";
+						
+					}	
+					
+					function handleoutageValidation(){
+						
+						val=document.getElementById('jiraForm:outageTicket').value;
+					
+							 alert('enter values');
+							 
+						}
+					
+
+					
+				</script>  
+			
+								
+            </h:form>
+            
+  <ui:insert name="status">
+            <p:ajaxStatus style="width:32px;height:32px;display:block;position:fixed;right:0;top:0;">
+                <f:facet name="start">
+                    <p:graphicImage value="/design/ajax-loader.gif" />
+                </f:facet>
+
+                <f:facet name="complete">
+                    <h:outputText value="" />
+                </f:facet>
+            </p:ajaxStatus>
+        </ui:insert>
+
+
+	</h:body>
+
+</f:view>
+</html>
